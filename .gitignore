@@ -1,0 +1,21 @@
+node_modules
+.env
+
+# Python bytecode
+backend/app/__pycache__/
+
+# Virtual environment
+backend/myenv/
+
+# Node modules
+frontend/node_modules/
+
+# TypeScript build artifacts
+frontend/dist/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
