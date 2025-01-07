@@ -6,3 +6,4 @@ requests==2.31.0
 Werkzeug==3.0.1
 blinker==1.9.0
 Flask-Session==0.8.0
+PyMuPDF==1.22.5

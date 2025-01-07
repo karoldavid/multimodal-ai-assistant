@@ -1,10 +1,11 @@
 import React from "react";
-import "./Chat.css";
+import "./Playground.css";
 import Message from "./Message";
 import ChatInput from "./ChatInput";
+import FileUpload from "./FileUpload";
 import useChat from "../hooks/useChat";
 
-const Chat: React.FC = () => {
+const Playgound: React.FC = () => {
   const { input, setInput, messages, handleSubmit } = useChat();
 
   return (
@@ -14,14 +15,16 @@ const Chat: React.FC = () => {
           <Message key={index} message={message} />
         ))}
       </div>
-
       <ChatInput
         input={input}
         setInput={setInput}
         handleSubmit={handleSubmit}
       />
+      <div className="p-4 bg-gray-100 border-t border-gray-300 flex items-center">
+        <FileUpload />
+      </div>
     </div>
   );
 };
 
-export default Chat;
+export default Playgound;
