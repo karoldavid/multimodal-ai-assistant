@@ -1,16 +1,13 @@
 import React from "react";
+import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import { useChat } from "../context/ChatContext";
+import MicrophoneButton from "./MicrophoneButton";
+import "./ChatInput.css";
 
-interface ChatInputProps {
-  input: string;
-  setInput: React.Dispatch<React.SetStateAction<string>>;
-  handleSubmit: (e: React.FormEvent) => void;
-}
+const ChatInput = () => {
+  const { input, setInput, handleSubmit, handleVoiceInput, chatState } =
+    useChat();
 
-const ChatInput: React.FC<ChatInputProps> = ({
-  input,
-  setInput,
-  handleSubmit,
-}) => {
   return (
     <form
       onSubmit={handleSubmit}
@@ -19,15 +16,37 @@ const ChatInput: React.FC<ChatInputProps> = ({
       <input
         type="text"
         value={input}
+        disabled={
+          chatState === "thinking" ||
+          chatState === "listening" ||
+          chatState === "speaking"
+        }
         onChange={(e) => setInput(e.target.value)}
-        placeholder="Type your message..."
+        placeholder={
+          chatState !== "listening"
+            ? "Type your message..."
+            : "Speak into your microphone..."
+        }
         className="flex-1 p-2 border rounded mr-2"
+      />
+      <MicrophoneButton
+        disabled={
+          chatState === "thinking" ||
+          chatState === "listening" ||
+          chatState === "speaking"
+        }
+        handleClick={handleVoiceInput}
       />
       <button
         type="submit"
-        className="p-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+        className="p-2 bg-blue-500 text-white rounded hover:bg-blue-700 flex items-center justify-center"
+        disabled={
+          chatState === "thinking" ||
+          chatState === "listening" ||
+          chatState === "speaking"
+        }
       >
-        Send
+        <PaperAirplaneIcon className="h-6 w-6" />
       </button>
     </form>
   );
