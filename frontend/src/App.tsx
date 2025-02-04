@@ -1,4 +1,5 @@
 import React from "react";
+import { ChatProvider } from "./context/ChatContext";
 import Playground from "./components/Playground";
 
 const App: React.FC = () => {
@@ -12,7 +13,9 @@ const App: React.FC = () => {
       </header>
 
       <div className="flex-1">
-        <Playground />
+        <ChatProvider>
+          <Playground />
+        </ChatProvider>
       </div>
     </div>
   );

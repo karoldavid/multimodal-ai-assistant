@@ -7,6 +7,7 @@ from datetime import timedelta
 
 from .chat import bp as chat_bp
 from .file import bp as file_bp
+from .speech import bp as speech_bp
 
 def create_app():
     app = Flask(__name__)
@@ -31,5 +32,6 @@ def create_app():
 
     app.register_blueprint(chat_bp)
     app.register_blueprint(file_bp)
+    app.register_blueprint(speech_bp)
 
     return app

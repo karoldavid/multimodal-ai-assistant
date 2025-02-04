@@ -1,6 +1,6 @@
 # Multimodal AI Assistant Playground
 
-This project is a playground for building a Multimodal AI Assistant with a Flask backend and a React frontend. The project currently supports real-time messaging and PDF file uploads for context.
+This project is a playground for building a Multimodal AI Assistant with a Flask backend and a React frontend. The project currently supports real-time messaging, PDF file uploads for context, and speech (both text-to-speech/speech-to-text).
 
 ![AI Playground Picture](assets/ai-playground.png)
 
@@ -8,13 +8,17 @@ This project is a playground for building a Multimodal AI Assistant with a Flask
 
 - Real-time messaging
 - PDF File Upload for context
+- Speech (both text-to-speech/speech-to-text)
 - System Prompt defined for AI Assistant
 - Conversation context stored in session cookie
+- Visual feedback with thinking dots during AI response generation
+- AI assistant's responses are typed as a human would do it, enhancing the human touch and usability
 
 ## Tech Stack
 
 - **Backend**: Python, Flask, Redis, Azure OpenAI GPT-4 Omni
 - **Frontend**: React, Tailwind CSS, TypeScript
+- **Speech**: Microsoft Cognitive Services Speech SDK
 
 ## Environment Variables
 
@@ -25,9 +29,13 @@ FLASK_ENV=development
 CHOKIDAR_USEPOLLING=true
 AZURE_OPENAI_API_KEY=your_azure_openai_api_key
 AZURE_OPENAI_ENDPOINT=your_azure_openai_endpoint
+AZURE_SPEECH_KEY=your_azure_speech_key
+AZURE_SPEECH_REGION=your_azure_speech_region
 REDIS_HOST=your_redis_host (default: localhost)
 REDIS_PORT=your_redis_port (default: 6379)
 REACT_APP_BACKEND_URL=http://localhost:5000
+REACT_APP_AZURE_SPEECH_KEY=your_azure_speech_key
+REACT_APP_AZURE_SPEECH_REGION=your_azure_speech_region
 ```
 
 ## Real-time Messaging
@@ -73,6 +81,25 @@ The API integration for sending messages and uploading PDF files is in the [`api
 - `sendMessage(message: string)`: Sends a chat message to the backend for processing.
 - `sendFile(file: File)`: Sends the selected PDF file to the backend for processing.
 
+## Speech
+
+The application supports speech functionality, including both text-to-speech and speech-to-text capabilities.
+
+### Backend Implementation
+
+The backend implementation for handling voice input and output is in the [`speech.py`](backend/app/speech.py) file. It includes the following key functions:
+
+- `create_speech_config()`: Retrieves Azure Cognitive Services Speech configuration from environment variables.
+- `get_speech_token()`: Endpoint to retrieve a speech token from Azure Cognitive Services.
+
+### Frontend Implementation
+
+The frontend implementation for handling voice input and output is in the [`useSpeech.ts`](frontend/src/hooks/useSpeech.ts) file. It includes the following key functions:
+
+- `setupSpeechRecognition()`: Sets up the speech recognition configuration.
+- `recognizeSpeech(onRecognized: (text: string) => void)`: Recognizes speech and converts it to text.
+- `synthesizeSpeech(text: string, onSpeakStart: () => void, onSpeakEnd: () => void)`: Synthesizes speech from text.
+
 ## Project Structure
 
 ```
@@ -85,6 +112,7 @@ multimodal-ai-assistant
 │   │   ├── chat.py
 │   │   ├── config.py
 │   │   ├── file.py
+│   │   ├── speech.py
 │   └── requirements.txt
 ├── frontend
 │   ├── public
@@ -97,7 +125,7 @@ multimodal-ai-assistant
 │       │   ├── FileUpload.tsx
 │       │   └── Chat.css
 │       ├── hooks
-│       │   └── useChat.ts
+│       │   └── useSpeech.ts
 │       ├── services
 │       │   └── api.ts
 │       ├── App.tsx
@@ -162,6 +190,46 @@ The AI Assistant is initialized with a system prompt that defines its behavior a
 ## Conversation Context
 
 The AI Assistant maintains the conversation context by storing the conversation history in a session cookie. This allows the assistant to provide coherent and contextually relevant responses throughout the interaction.
+
+## Speech-to-Text and Text-to-Speech Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant AzureSpeech
+    participant OpenAI
+
+    User->>Frontend: Voice Input
+    Frontend->>AzureSpeech: Recognize Speech
+    AzureSpeech->>Frontend: Speech to Text
+    Frontend->>Backend: Send Text Message
+    Backend->>OpenAI: Send Message to OpenAI
+    OpenAI->>Backend: OpenAI Response
+    Backend->>Frontend: Send Text Response
+    Frontend->>AzureSpeech: Synthesize Speech
+    AzureSpeech->>Frontend: Text to Speech
+    Frontend->>User: Audio Output
+```
+
+## PDF Upload Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant AzureOpenAI
+
+    User->>Frontend: Upload PDF
+    Frontend->>Backend: Send PDF File
+    Backend->>Backend: Extract Text from PDF
+    Backend->>AzureOpenAI: Send Text to OpenAI
+    AzureOpenAI->>Backend: OpenAI Response
+    Backend->>Frontend: Send Response
+    Frontend->>User: Display Response
+```
 
 ## License
 
