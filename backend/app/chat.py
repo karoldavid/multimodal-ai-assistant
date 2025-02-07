@@ -29,7 +29,7 @@ def create_chat_client():
     client = AzureOpenAI(
         azure_endpoint=azure_endpoint,
         api_key=api_key,
-        api_version="2024-02-01",
+        api_version="2024-08-01-preview",
     )
     return client
 
