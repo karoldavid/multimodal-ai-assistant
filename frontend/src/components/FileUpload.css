@@ -4,3 +4,32 @@
   text-overflow: ellipsis;
   height: 1.5em; /* Adjust based on your font size */
 }
+
+.file-upload-container {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  width: 80px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; /* Position the tooltip above the icon */
+  left: 50%;
+  margin-left: -40px; /* Use half of the width to center the tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+label:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}

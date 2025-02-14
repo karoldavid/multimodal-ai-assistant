@@ -14,8 +14,11 @@ speech_key = os.getenv("AZURE_SPEECH_KEY")
 speech_region = os.getenv("AZURE_SPEECH_REGION")
 if not speech_key or not speech_region:
     logger.error("Azure Speech key or region is not configured.")
-    raise ValueError("Missing AZURE_SPEECH_KEY or AZURE_SPEECH_REGION environment variables.")
+    raise ValueError(
+        "Missing AZURE_SPEECH_KEY or AZURE_SPEECH_REGION environment variables."
+    )
 speech_config = SpeechConfig(subscription=speech_key, region=speech_region)
+
 
 @bp.route("/api/voice", methods=["POST"])
 def voice_input_route():
@@ -42,9 +45,11 @@ def voice_input_route():
         chat_reply = chat_response.json["reply"]
         logger.info(f"Chat response: {chat_reply}")
 
-         # Convert AI response to speech
+        # Convert AI response to speech
         audio_config = AudioConfig(use_default_speaker=True)
-        synthesizer = SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
+        synthesizer = SpeechSynthesizer(
+            speech_config=speech_config, audio_config=audio_config
+        )
         result = synthesizer.speak_text_async(chat_reply).get()
 
         if result.reason != result.Reason.SynthesizingAudioCompleted:

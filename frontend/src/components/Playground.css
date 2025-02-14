@@ -46,3 +46,10 @@
     text-shadow: 0.25em 0 0 black, 0.5em 0 0 black;
   }
 }
+
+.file-upload-container {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+}

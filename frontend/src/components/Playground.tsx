@@ -32,7 +32,7 @@ const Playground: React.FC = () => {
           )}
       </div>
       <ChatInput />
-      <div className="p-4 bg-gray-100 border-t border-gray-300 flex items-center">
+      <div className="p-4 bg-gray-100 border-t border-gray-300 flex flex-col items-start space-y-4">
         <FileUpload />
       </div>
     </div>
