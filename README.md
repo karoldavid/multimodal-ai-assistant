@@ -38,68 +38,6 @@ REACT_APP_AZURE_SPEECH_KEY=your_azure_speech_key
 REACT_APP_AZURE_SPEECH_REGION=your_azure_speech_region
 ```
 
-## Real-time Messaging
-
-The application supports real-time messaging with the AI assistant. Users can send messages and receive responses in real-time.
-
-### Backend Implementation
-
-The backend implementation for handling chat messages is in the [`chat.py`](backend/app/chat.py) file. It includes the following key functions:
-
-- `create_chat_client()`: Creates a client for the Azure OpenAI API using the provided API key and endpoint.
-- `chat(client, messages)`: Sends the conversation history to the Azure OpenAI API and retrieves the assistant's response.
-- `extract_message(chat_result)`: Extracts the assistant's message from the API response.
-- `chat_route()`: Handles the chat API endpoint, processes user messages, and updates the conversation history.
-
-### Frontend Implementation
-
-The frontend implementation for sending chat messages is in the [`ChatInput.tsx`](frontend/src/components/ChatInput.tsx) file. It includes the following key components:
-
-- `ChatInput`: A React component that allows users to type and send messages. It handles input changes, form submission, and displays the send button.
-
-## PDF File Upload for Context
-
-The application supports uploading PDF files to provide additional context for the AI assistant. The uploaded PDF files are processed, and their text content is extracted and added to the conversation history.
-
-### Backend Implementation
-
-The backend implementation for handling PDF file uploads is in the [`file.py`](backend/app/file.py) file. It includes the following key functions:
-
-- `allowed_file(filename)`: Checks if the uploaded file is a PDF.
-- `upload_file(chat_client_creator=create_chat_client)`: Handles the file upload, saves the file, extracts text from the PDF, and updates the conversation history.
-
-### Frontend Implementation
-
-The frontend implementation for uploading PDF files is in the [`FileUpload.tsx`](frontend/src/components/FileUpload.tsx) file. It includes the following key components:
-
-- `FileUpload`: A React component that allows users to upload PDF files. It handles file selection, displays upload progress, and shows any errors.
-
-### API Integration
-
-The API integration for sending messages and uploading PDF files is in the [`api.ts`](frontend/src/services/api.ts) file. It includes the following key functions:
-
-- `sendMessage(message: string)`: Sends a chat message to the backend for processing.
-- `sendFile(file: File)`: Sends the selected PDF file to the backend for processing.
-
-## Speech
-
-The application supports speech functionality, including both text-to-speech and speech-to-text capabilities.
-
-### Backend Implementation
-
-The backend implementation for handling voice input and output is in the [`speech.py`](backend/app/speech.py) file. It includes the following key functions:
-
-- `create_speech_config()`: Retrieves Azure Cognitive Services Speech configuration from environment variables.
-- `get_speech_token()`: Endpoint to retrieve a speech token from Azure Cognitive Services.
-
-### Frontend Implementation
-
-The frontend implementation for handling voice input and output is in the [`useSpeech.ts`](frontend/src/hooks/useSpeech.ts) file. It includes the following key functions:
-
-- `setupSpeechRecognition()`: Sets up the speech recognition configuration.
-- `recognizeSpeech(onRecognized: (text: string) => void)`: Recognizes speech and converts it to text.
-- `synthesizeSpeech(text: string, onSpeakStart: () => void, onSpeakEnd: () => void)`: Synthesizes speech from text.
-
 ## Project Structure
 
 ```
