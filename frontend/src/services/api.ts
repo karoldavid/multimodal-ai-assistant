@@ -30,6 +30,21 @@ export const sendFile = async (file: File) => {
   }
 };
 
+export const sendImage = async (file: File) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    await axios.post(`${backendUrl}/api/image`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    throw error;
+  }
+};
+
 export const sendVoice = async (text: string) => {
   try {
     const response = await axios.post(`${backendUrl}/api/voice`, { text });

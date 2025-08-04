@@ -4,16 +4,21 @@ import flask
 import fitz  # PyMuPDF
 from werkzeug.utils import secure_filename
 from .chat import create_chat_client, chat, extract_message
+from pdf2image import convert_from_path
+from PIL import Image
+import io
+import base64
 
 logger = logging.getLogger(__name__)
 
 UPLOAD_FOLDER = "/tmp"
-ALLOWED_EXTENSIONS = {'pdf'}
+ALLOWED_EXTENSIONS = {"pdf"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 bp = flask.Blueprint("file_upload", __name__)
+
 
 @bp.before_request
 def limit_file_size():
@@ -21,8 +26,41 @@ def limit_file_size():
         logger.error("File size exceeds the limit.")
         return flask.jsonify({"error": "File size exceeds 10 MB limit"}), 413
 
+
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def analyze_pdf_for_images(file_path):
+    doc = fitz.open(file_path)
+    image_count = 0
+    for page in doc:
+        images = page.get_images(full=True)
+        image_count += len(images)
+    return image_count
+
+
+def convert_pdf_to_images(file_path, dpi=200):
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    try:
+        images = convert_from_path(file_path, dpi=dpi)
+    except Exception as e:
+        raise RuntimeError(f"Error converting PDF to images: {e}")
+
+    image_buffers = []
+
+    for image in images:
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format="PNG")
+        img_byte_arr = img_byte_arr.getvalue()
+
+        base64_image = base64.b64encode(img_byte_arr).decode("utf-8")
+        image_buffers.append(f"data:image/png;base64,{base64_image}")
+
+    return image_buffers
+
 
 @bp.route("/api/file", methods=["POST"])
 def upload_file(chat_client_creator=create_chat_client):
@@ -37,11 +75,14 @@ def upload_file(chat_client_creator=create_chat_client):
 
     if not allowed_file(file.filename):
         logger.error("Invalid file type.")
-        return flask.jsonify({"error": "Invalid file type. Only PDF files are allowed."}), 400
+        return (
+            flask.jsonify({"error": "Invalid file type. Only PDF files are allowed."}),
+            400,
+        )
 
     filename = secure_filename(file.filename)
     file_path = os.path.join(UPLOAD_FOLDER, filename)
-    
+
     try:
         file.save(file_path)
         logger.info(f"File saved to {file_path}")
@@ -49,7 +90,43 @@ def upload_file(chat_client_creator=create_chat_client):
         logger.error(f"Error saving file: {str(e)}")
         return flask.jsonify({"error": "Error saving file."}), 500
 
-    # Extract text from the PDF
+    image_count = analyze_pdf_for_images(file_path)
+    if image_count > 0:
+        images = convert_pdf_to_images(file_path)
+
+        messages = [
+            {
+                "role": "system",
+                "content": "You are an AI assistant that extracts data from documents and returns them as structured JSON objects. Do not return as a code block.",
+            },
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "What is in this document?"},
+                ]
+                + [{"type": "image_url", "image_url": {"url": img}} for img in images],
+            },
+        ]
+
+        try:
+            chat_client = create_chat_client()
+            chat_result = chat(chat_client, messages)
+            assistant_message = extract_message(chat_result)
+
+            if "conversation_history" not in flask.session:
+                flask.session["conversation_history"] = []
+            flask.session["conversation_history"].append(
+                {"role": "assistant", "content": assistant_message}
+            )
+            logger.info("Successfully processed PDF images with OpenAI.")
+            return (
+                flask.jsonify({"reply": assistant_message, "file_path": file_path}),
+                200,
+            )
+        except Exception as e:
+            logger.error(f"Error processing PDF images: {str(e)}")
+            return flask.jsonify({"error": "Failed to process the file."}), 500
+
     try:
         pdf_document = fitz.open(file_path)
         pdf_text = ""
@@ -59,7 +136,6 @@ def upload_file(chat_client_creator=create_chat_client):
 
         logger.info("PDF text extracted successfully.")
 
-        # Retrieve or initialize the conversation history
         if "conversation_history" not in flask.session:
             flask.session["conversation_history"] = [
                 {
@@ -67,25 +143,24 @@ def upload_file(chat_client_creator=create_chat_client):
                     "content": "You are 'Biz Talk', an AI business meeting analyzer focused on quick, actionable insights. Your responses should be brief and spoken naturally (1-3 sentences max).\n\nFor any response longer than 3 sentences, label it as [DISPLAY ONLY - DO NOT SPEAK].\n\nWhen analyzing meetings:\n1. Focus on communication patterns, cultural dynamics, and business efficiency\n2. Ask simple yes/no questions or provide two clear options\n3. Suggest concrete actions for improvement\n4. Keep verbal responses conversational and concise\n5. Use voice for key insights, display for detailed analysis\n\n[DISPLAY ONLY - DO NOT SPEAK]\nAnalysis categories to track:\n- Meeting efficiency metrics\n- Cultural communication patterns\n- Power dynamics and hierarchies\n- Decision-making clarity\n- Action item follow-through\n- Communication barriers\n- Suggested improvements\n\nFor uploaded meeting transcripts:\n1. Offer quick verbal summary\n2. Suggest 2-3 immediate actions\n3. Ask if user wants to:\n   a) Focus on cultural dynamics\n   b) Focus on meeting efficiency",
                 }
             ]
-        logger.debug(f"Current conversation history: {flask.session['conversation_history']}")
-
-        # Append the extracted PDF text to the conversation history
+        logger.debug(
+            f"Current conversation history: {flask.session['conversation_history']}"
+        )
         flask.session["conversation_history"].append(
             {"role": "user", "content": pdf_text}
         )
 
-        # Send the conversation history to the API
         chat_client = create_chat_client()
         chat_result = chat(chat_client, flask.session["conversation_history"])
 
-        # Get the assistant's reply
         assistant_message = extract_message(chat_result)
 
-        # Append the assistant's reply to the conversation history
         flask.session["conversation_history"].append(
             {"role": "assistant", "content": assistant_message}
         )
-        logger.debug(f"Updated conversation history: {flask.session['conversation_history']}")
+        logger.debug(
+            f"Updated conversation history: {flask.session['conversation_history']}"
+        )
 
         logger.info("Successfully processed PDF text with OpenAI.")
         return flask.jsonify({"reply": assistant_message, "file_path": file_path}), 200

@@ -9,3 +9,5 @@ Flask-Session==0.8.0
 PyMuPDF==1.22.5
 SpeechRecognition==3.13.0
 azure-cognitiveservices-speech==1.41.1
+pdf2image==1.17.0
+pillow==11.1.0

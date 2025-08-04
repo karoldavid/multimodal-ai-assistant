@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { sendFile } from "../services/api";
 import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 
+import "./FileUpload.css";
+
 const FileUpload: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -36,10 +38,9 @@ const FileUpload: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col w-full p-4">
-      <div className="flex items-center w-full space-x-4">
-        {/* Left Icon / Upload Indicator */}
-        <div className="flex items-center justify-center">
+    <div className="file-upload-container">
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center justify-center relative">
           {!isUploading && (
             <label htmlFor="file-upload" className="cursor-pointer">
               <ArrowUpTrayIcon
@@ -56,6 +57,7 @@ const FileUpload: React.FC = () => {
                 onChange={handleFileChange}
                 disabled={isUploading || uploadedFiles.length >= 1}
               />
+              <span className="tooltip-text">Upload PDF</span>
             </label>
           )}
           {isUploading && (
@@ -75,7 +77,7 @@ const FileUpload: React.FC = () => {
               {uploadedFiles.map((file, index) => (
                 <li
                   key={index}
-                  className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-md"
+                  className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-md single-line"
                 >
                   {file.name}
                 </li>
